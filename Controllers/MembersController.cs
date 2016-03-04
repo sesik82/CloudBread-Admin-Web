@@ -27,7 +27,7 @@ namespace CloudBreadAdminWeb.Controllers
         Logging.CBLoggers logMessage = new Logging.CBLoggers();
 
         // 개별 entity 복호화
-        public Members DecryptResult(Members item)   
+        public Members DecryptResult(Members item)
         {
             try
             {
@@ -301,11 +301,11 @@ namespace CloudBreadAdminWeb.Controllers
                 members.LastLoginDT = UserTime.GetUserTime(DateTime.Parse(members.LastLoginDT), Session["AdminTimeZone"].ToString()).ToString();
                 members.LastLogoutDT = UserTime.GetUserTime(DateTime.Parse(members.LastLogoutDT), Session["AdminTimeZone"].ToString()).ToString();
                 members.AccountBlockEndDT = UserTime.GetUserTime(DateTime.Parse(members.AccountBlockEndDT), Session["AdminTimeZone"].ToString()).ToString();
-                
+
                 members.CreatedAt = UserTime.GetUserTime(members.CreatedAt.DateTime, Session["AdminTimeZone"].ToString());
                 members.UpdatedAt = UserTime.GetUserTime(members.UpdatedAt.DateTime, Session["AdminTimeZone"].ToString());
                 members.DataFromRegionDT = UserTime.GetUserTime(members.DataFromRegionDT.DateTime, Session["AdminTimeZone"].ToString());
-                
+
                 // 관리자 접근 로그 
                 logMessage.memberID = this.Session["AdminID"].ToString();
                 logMessage.Level = "INFO";
@@ -467,7 +467,7 @@ namespace CloudBreadAdminWeb.Controllers
                 members.LastLoginDT = UserTime.GetUserTime(DateTime.Parse(members.LastLoginDT), Session["AdminTimeZone"].ToString()).ToString();
                 members.LastLogoutDT = UserTime.GetUserTime(DateTime.Parse(members.LastLogoutDT), Session["AdminTimeZone"].ToString()).ToString();
                 members.AccountBlockEndDT = UserTime.GetUserTime(DateTime.Parse(members.AccountBlockEndDT), Session["AdminTimeZone"].ToString()).ToString();
-                
+
                 //일반 컬럼 값에 대한 처리
 
                 // 관리자 접근 로그 
@@ -490,8 +490,8 @@ namespace CloudBreadAdminWeb.Controllers
                 Logging.RunLog(logMessage);
 
                 throw;
-            } 
-                
+            }
+
         }
 
         // POST: Members/Edit/5
@@ -597,7 +597,7 @@ namespace CloudBreadAdminWeb.Controllers
 
                 throw;
             }
-            
+
         }
 
         // POST: Members/Delete/5
@@ -616,7 +616,7 @@ namespace CloudBreadAdminWeb.Controllers
                 Members members = db.Members.Find(id);
                 db.Members.Remove(members);
                 db.SaveChanges();
-                
+
                 // 관리자 접근 로그 
                 logMessage.memberID = this.Session["AdminID"].ToString();
                 logMessage.Level = "INFO";
@@ -638,7 +638,104 @@ namespace CloudBreadAdminWeb.Controllers
 
                 throw;
             }
-            
+
+        }
+
+        [HttpPost]
+        public ActionResult InlineEdit([Bind(Include = "MemberID,MemberPWD,EmailAddress,EmailConfirmedYN,PhoneNumber1,PhoneNumber2,PINumber,Name1,Name2,Name3,DOB,RecommenderID,MemberGroup,LastDeviceID,LastIPaddress,LastLoginDT,LastLogoutDT,LastMACAddress,AccountBlockYN,AccountBlockEndDT,AnonymousYN,C3rdAuthProvider,C3rdAuthID,C3rdAuthParam,PushNotificationID,PushNotificationProvider,PushNotificationGroup,sCol1,sCol2,sCol3,sCol4,sCol5,sCol6,sCol7,sCol8,sCol9,sCol10,TimeZoneID,HideYN,DeleteYN,CreatedAt,UpdatedAt,DataFromRegion,DataFromRegionDT")] Members members)
+        {
+
+            try
+            {
+                // Edit  세션체크
+                if (!CheckSession())
+                {
+                    return Redirect("/AdminLogin/Login");
+                }
+
+                if (ModelState.IsValid)
+                {
+                    // 암호화 처리
+                    if (globalVal.CloudBreadCryptSetting == "AES256")
+                    {
+                        EncryptResult(members);
+                    }
+
+                    // Edit 입력값 자동처리
+                    //members.MemberPWD = Crypto.SHA512Hash(members.MemberPWD); // Edit은 PWD 해쉬 시키면 안된다.
+                    //members.LastLoginDT = UserTime.SetUtcTime(DateTime.Parse(members.LastLoginDT), Session["AdminTimeZone"].ToString()).ToString();
+                    //members.LastLogoutDT = UserTime.SetUtcTime(DateTime.Parse(members.LastLogoutDT), Session["AdminTimeZone"].ToString()).ToString();
+                    //members.AccountBlockEndDT = UserTime.SetUtcTime(DateTime.Parse(members.AccountBlockEndDT), Session["AdminTimeZone"].ToString()).ToString();
+
+                    members.UpdatedAt = DateTimeOffset.UtcNow;
+
+                    db.Entry(members).State = EntityState.Modified;
+
+                    // 관리자 접근 로그 
+                    logMessage.memberID = this.Session["AdminID"].ToString();
+                    logMessage.Level = "INFO";
+                    logMessage.Logger = "MembersController-InlineEdit(members)";
+                    logMessage.Message = JsonConvert.SerializeObject(members);
+                    Logging.RunLog(logMessage);
+
+                    db.SaveChanges();
+                }
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                //에러로그
+                logMessage.memberID = this.Session["AdminID"].ToString();
+                logMessage.Level = "ERROR";
+                logMessage.Logger = "MembersController-InlineEdit(members)";
+                logMessage.Message = JsonConvert.SerializeObject(members);
+                logMessage.Exception = ex.ToString();
+                Logging.RunLog(logMessage);
+
+                throw;
+            }
+
+        }
+
+        [HttpPost]
+        public JsonResult InlineDelete(string id)
+        {
+            try
+            {
+                // Delete  세션체크
+                if (!CheckSession())
+                {
+                    return Json(false, JsonRequestBehavior.AllowGet);
+                    //return Redirect("/AdminLogin/Login");
+                }
+
+                Members members = db.Members.Find(id);
+                db.Members.Remove(members);
+                db.SaveChanges();
+
+                // 관리자 접근 로그 
+                logMessage.memberID = this.Session["AdminID"].ToString();
+                logMessage.Level = "INFO";
+                logMessage.Logger = "MembersController-InlineDelete(id)";
+                logMessage.Message = string.Format("id : {0}", id);
+                Logging.RunLog(logMessage);
+
+                //return RedirectToAction("Index");
+                return Json(true, JsonRequestBehavior.AllowGet);
+            }
+            catch (Exception ex)
+            {
+                //에러로그
+                logMessage.memberID = this.Session["AdminID"].ToString();
+                logMessage.Level = "ERROR";
+                logMessage.Logger = "MembersController-InlineDelete(id)";
+                logMessage.Message = string.Format("id : {0}", id);
+                logMessage.Exception = ex.ToString();
+                Logging.RunLog(logMessage);
+
+                throw;
+            }
+
         }
 
         protected override void Dispose(bool disposing)

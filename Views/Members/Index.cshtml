@@ -1,13 +1,77 @@
 ﻿@model PagedList.IPagedList<CloudBreadAdminWeb.Members>
 @using PagedList.Mvc;
-
 <link href="~/Content/PagedList.css" rel="stylesheet" type="text/css" />
 
 @{
     ViewBag.Title = "Index";
     Layout = "~/Views/Shared/_Layout.cshtml";
-}
 
+    // 웹그리드 생성
+    var gridView = new WebGrid(source: Model);
+}
+<!-- 웹그리드 스타일 -->
+<style type="text/css">
+    .edit-mode {
+    }
+
+    .edit-user {
+    }
+
+        .edit-user display-mode {
+        }
+
+    .save-user edit-mode {
+    }
+
+    .display-mode {
+    }
+
+    .cancel-user {
+    }
+
+    .webgrid-table {
+        font-family: Arial,Helvetica,sans-serif;
+        font-size: 14px;
+        font-weight: normal;
+        width: 650px;
+        display: table;
+        border-collapse: collapse;
+        border: solid px #C5C5C5;
+        background-color: white;
+    }
+
+        .webgrid-table td, th {
+            border: 1px solid #C5C5C5;
+            padding: 3px 7px 2px;
+        }
+
+    .webgrid-header, .webgrid-header a {
+        background-color: #E3E3E3;
+        color: black;
+        text-align: left;
+        text-decoration: none;
+    }
+
+    .webgrid-footer {
+    }
+
+    .webgrid-row-style {
+        padding: 3px 7px 2px;
+    }
+
+    .webgrid-alternating-row {
+        background-color: #F5F5F5;
+        padding: 3px 7px 2px;
+    }
+
+    .col1Width {
+        width: 50px;
+    }
+
+    .col2Width {
+        width: 200px;
+    }
+</style>
 <h2>Index</h2>
 
 <p>
@@ -29,7 +93,7 @@
     options.Add(new SelectListItem { Value = "LastDeviceID", Text = "LastDeviceID" });
     options.Add(new SelectListItem { Value = "3rdAuthID", Text = "3rdAuthID" });
     options.Add(new SelectListItem { Value = "PushNotificationID", Text = "PushNotificationID" });
-    
+
     <p>
         검색 :
         @Html.DropDownList("SearchCondition", options)
@@ -38,93 +102,223 @@
         <input type="submit" value="Search" />
     </p>
 }
-
-<table class="table">
-    <tr>
-        <th></th>
-        <th>
-            MemberID
-        </th>
-        <th>
-            EmailAddress
-        </th>
-        <th>
-            Name1
-        </th>
-        <th>
-            MemberGroup
-        </th>
-        <th>
-            LastDeviceID
-        </th>
-        <th>
-            3rdAuthID
-        </th>
-        <th>
-            PushNotificationID
-        </th>
-        <th>
-            HideYN
-        </th>
-        <th>
-            DeleteYN
-        </th>
-        <th>
-            CreatedAt
-        </th>
-        <th>
-            UpdatedAt
-        </th>
-    </tr>
-
-@foreach (var item in Model) {
-    <tr>
-        <td>
-            @Html.ActionLink("수정", "Edit", new { id = item.MemberID }) |
-            @Html.ActionLink("상세", "Details", new { id = item.MemberID }) | 
-            @Html.ActionLink("삭제", "Delete", new { id = item.MemberID })
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.MemberID)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.EmailAddress)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.Name1)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.MemberGroup)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.LastDeviceID)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.C3rdAuthID)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.PushNotificationID)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.HideYN)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.DeleteYN)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.CreatedAt)
-        </td>
-        <td>
-            @Html.DisplayFor(modelItem => item.UpdatedAt)
-        </td>
-    </tr>
-}
-
-</table>
-
-
+<!-- 웹그리드 추가 -->
+@gridView.GetHtml(tableStyle: "webgrid-table",
+        headerStyle: "webgrid-header",
+        footerStyle: "webgrid-footer",
+        alternatingRowStyle: "webgrid-alternating-row",
+        selectedRowStyle: "webgrid-selected-row",
+        rowStyle: "webgrid-row-style",
+        mode: WebGridPagerModes.All,
+columns:
+        gridView.Columns(
+            gridView.Column("Action", format: @<text>
+                <button class="edit-user display-mode">Edit</button>
+                <button class="delete-user display-mode">Delete</button>
+                <button class="save-user edit-mode">Save</button>
+                <button class="cancel-user edit-mode">Cancel</button>
+                <!-- 필수 항목과 수정이 불가한 항목들을 히든필드로 처리 -->
+                <input type="hidden" id="MemberID" value="@item.MemberID" />
+                <input type="hidden" id="LastDeviceID" value="@item.LastDeviceID" />
+                <input type="hidden" id="LastIPaddress" value="@item.LastIPaddress" />
+                <input type="hidden" id="LastLoginDT" value="@item.LastLoginDT" />
+                <input type="hidden" id="LastLogoutDT" value="@item.LastLogoutDT" />
+                <input type="hidden" id="LastMACAddress" value="@item.LastMACAddress" />
+                <input type="hidden" id="AccountBlockYN" value="N" />
+                <input type="hidden" id="AccountBlockEndDT" value="1900-01-01" />
+                <input type="hidden" id="CreatedAt" value="@item.CreatedAt" />
+                <input type="hidden" id="MemberPWD" value="@item.MemberPWD" />
+                <input type="hidden" id="C3rdAuthParam" value="@item.C3rdAuthParam" />
+            </text>, style: "col3Width", canSort: false),
+            gridView.Column("MemberID", "MemberID",
+            format:
+            @<text>
+                <span id="spnMemberID">@item.MemberID</span>
+            </text>),
+            // class 속성을 edit-mode 로 한 element는 Edit 버튼 클릭시 디스플레이됨
+            gridView.Column("EmailAddress", "EmailAddress",
+            format:
+            @<text>
+                <span id="spnEmailAddress">@item.EmailAddress</span>
+                @Html.TextBox("EmailAddress", (object)item.EmailAddress, new { @class = "edit-mode" })
+            </text>),
+            gridView.Column("Name1", "Name1",
+            format:
+            @<text>
+                <span id="spnName1">@item.Name1</span>
+                @Html.TextBox("Name1", (object)item.Name1, new { @class = "edit-mode" })
+            </text>),
+            gridView.Column("MemberGroup", "MemberGroup",
+            format:
+            @<text>
+                <span id="spnMemberGroup">@item.MemberGroup</span>
+                @Html.TextBox("MemberGroup", (object)item.MemberGroup, new { @class = "edit-mode" })
+            </text>),
+            gridView.Column("MemberGroup", "MemberGroup",
+            format:
+            @<text>
+                <span id="spnLastDeviceID">@item.LastDeviceID</span>
+                @Html.TextBox("LastDeviceID", (object)item.LastDeviceID, new { @class = "edit-mode" })
+            </text>),
+            gridView.Column("C3rdAuthID", "3rdAuthID",
+            format:
+            @<text>
+                <span id="spn3rdAuthID">@item.C3rdAuthID</span>
+                @Html.TextBox("C3rdAuthID", (object)item.C3rdAuthID, new { @class = "edit-mode" })
+            </text>),
+            gridView.Column("PushNotificationID", "PushNotificationID",
+            format:
+            @<text>
+                <span id="spnPushNotificationID">@item.PushNotificationID</span>
+                @Html.TextBox("PushNotificationID", (object)item.PushNotificationID, new { @class = "edit-mode" })
+            </text>),
+            gridView.Column("HideYN", "HideYN",
+            format:
+            @<text>
+                <span id="spnHideYN">@item.HideYN</span>
+                @Html.TextBox("HideYN", (object)item.HideYN, new { @class = "edit-mode" })
+            </text>),
+            gridView.Column("DeleteYN", "DeleteYN",
+            format:
+            @<text>
+                <span id="spnDeleteYN">@item.DeleteYN</span>
+                @Html.TextBox("DeleteYN", (object)item.DeleteYN, new { @class = "edit-mode" })
+            </text>),
+            gridView.Column("CreatedAt", "CreatedAt",
+            format:
+            @<text>
+                <span id="spnCreatedAt">@item.CreatedAt</span>
+            </text>),
+            gridView.Column("UpdatedAt", "UpdatedAt",
+            format:
+            @<text>
+                <span id="spnUpdatedAt">@item.UpdatedAt</span>
+            </text>)
+))
 <br />
 Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
 
 @Html.PagedListPager(Model, page => Url.Action("Index",
                     new { page, currentFilter = ViewBag.CurrentFilter, SearchCondition = ViewBag.pageSearchCondition }))
+
+<script type="text/javascript">
+    $(function () {
+        // 페이지가 로드될때 class 가 edit-mode 인 element는 hide 처리
+        $('.edit-mode').hide();
+        $('.edit-user, .cancel-user').on('click', function () {
+            var tr = $(this).parents('tr:first');
+            tr.find('.edit-mode, .display-mode').toggle();
+        });
+
+        // Delete 버튼 클릭
+        $('.delete-user').on('click', function () {
+            if (confirm('정말 삭제하시겠습니까?')) {
+                var tr = $(this).parents('tr:first');
+                var MemberID = tr.find("#MemberID").val();
+                // MemberID 를 파라미터로 하여 삭제 메소드 호출
+                $.ajax({
+                    url: '/Members/InlineDelete/',
+                    data: { "id": MemberID },
+                    type: 'POST',
+                    success: function (data) {
+                        if (data) {
+                            location.href = "/Members/Index";
+                        }
+                        else {
+                            location.href = "/AdminLogin/Login";
+                        }
+                    }
+                });
+            }
+        });
+        // Save 버튼 클릭
+        $('.save-user').on('click', function () {
+            var tr = $(this).parents('tr:first');
+            var MemberID = tr.find("#MemberID").val();
+            var EmailAddress = tr.find("#EmailAddress").val();
+            var Name1 = tr.find("#Name1").val();
+            var MemberGroup = tr.find("#MemberGroup").val();
+            var PushNotificationID = tr.find("#PushNotificationID").val();
+            var HideYN = tr.find("#HideYN").val();
+            var DeleteYN = tr.find("#DeleteYN").val();
+            var C3rdAuthID = tr.find("#C3rdAuthID").val();
+            var LastDeviceID = tr.find("#LastDeviceID").val();
+            var LastIPaddress = tr.find("#LastIPaddress").val();
+            var LastLoginDT = tr.find("#LastLoginDT").val();
+            var LastLogoutDT = tr.find("#LastLogoutDT").val();
+            var LastMACAddress = tr.find("#LastMACAddress").val();
+            var AccountBlockYN = tr.find("#AccountBlockYN").val();
+            var AccountBlockEndDT = tr.find("#AccountBlockEndDT").val();
+            var CreatedAt = tr.find("#CreatedAt").val();
+            var MemberPWD = tr.find("#MemberPWD").val();
+            var C3rdAuthParam = tr.find("#C3rdAuthParam").val();
+
+            // 수정된 항목들은 다시 각 컬럼의 span element에 덮어씌운다.
+            tr.find("#spnName1").text(Name1);
+            tr.find("#spnEmailAddress").text(EmailAddress);
+            tr.find("#spnMemberGroup").text(MemberGroup);
+            tr.find("#spnPushNotificationID").text(PushNotificationID);
+            tr.find("#spnHideYN").text(HideYN);
+            tr.find("#spnDeleteYN").text(DeleteYN);
+            tr.find("#spn3rdAuthID").text(C3rdAuthID);
+            tr.find('.edit-mode, .display-mode').toggle();
+
+            // 모델 객체를 만들어서 액션메소드를 호출할 때 파라미터로 넘긴다.
+            var UserModel =
+            {
+                "MemberID": MemberID,
+                "MemberPWD": MemberPWD,
+                "EmailAddress": EmailAddress,
+                "Name1": Name1,
+                "EmailConfirmedYN": "",
+                "PhoneNumber1": "",
+                "PhoneNumber2": "",
+                "PINumber": "",
+                "Name2": "",
+                "Name3": "",
+                "DOB": "",
+                "RecommenderID": "",
+                "MemberGroup": MemberGroup,
+                "LastDeviceID": LastDeviceID,
+                "LastIPaddress": LastIPaddress,
+                "LastLoginDT": LastLoginDT,
+                "LastLogoutDT": LastLogoutDT,
+                "LastMACAddress": LastMACAddress,
+                "AccountBlockYN": AccountBlockYN,
+                "AccountBlockEndDT": AccountBlockEndDT,
+                "AnonymousYN": "",
+                "C3rdAuthProvider": "",
+                "C3rdAuthParam": C3rdAuthParam,
+                "C3rdAuthID": C3rdAuthID,
+                "PushNotificationID": PushNotificationID,
+                "PushNotificationProvider": "",
+                "PushNotificationGroup": "",
+                "sCol1": "",
+                "sCol2": "",
+                "sCol3": "",
+                "sCol4": "",
+                "sCol5": "",
+                "sCol6": "",
+                "sCol7": "",
+                "sCol8": "",
+                "sCol9": "",
+                "sCol10": "",
+                "CreatedAt": CreatedAt,
+                "UpdatedAt": Date.now,
+                "DataFromRegion": "",
+                "DataFromRegionDT": Date.now,
+                "TimeZoneID": "Korea Standard Time",
+                "HideYN": HideYN,
+                "DeleteYN": DeleteYN
+            };
+            $.ajax({
+                url: '/Members/InlineEdit/',
+                data: JSON.stringify(UserModel),
+                type: 'POST',
+                contentType: 'application/json; charset=utf-8',
+                success: function (data) {
+                }
+            });
+        });
+    })
+</script> 
